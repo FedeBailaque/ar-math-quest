@@ -97,3 +97,12 @@ InitTestScene*.unity*
 
 # Auto-generated scenes by play mode tests
 /[Aa]ssets/[Ii]nit[Tt]est[Ss]cene*.unity*
+
+# --- Unity generated folders inside ARMathQuest (nested project) ---
+ARMathQuest/[Ll]ibrary/
+ARMathQuest/[Tt]emp/
+ARMathQuest/[Oo]bj/
+ARMathQuest/[Bb]uild/
+ARMathQuest/[Bb]uilds/
+ARMathQuest/[Ll]ogs/
+ARMathQuest/[Uu]serSettings/
