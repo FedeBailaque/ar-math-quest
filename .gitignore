@@ -106,3 +106,10 @@ ARMathQuest/[Bb]uild/
 ARMathQuest/[Bb]uilds/
 ARMathQuest/[Ll]ogs/
 ARMathQuest/[Uu]serSettings/
+
+# Visual Studio / Rider
+*.sln
+*.slnx
+*.csproj
+*.user
+*.unityproj
