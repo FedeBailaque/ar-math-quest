@@ -1,14 +1,19 @@
-using UnityEngine;
 using TMPro;
+using UnityEngine;
 
 public class AnswerController : MonoBehaviour
 {
-    public int value;
-    public bool isCorrect;
+    [SerializeField] private TMP_Text label;
 
-    [HideInInspector] public GameController gameController;
-    [SerializeField] private TMP_Text tmpText;
-    [SerializeField] private TextMesh legacyText;
+    private int value;
+    private bool isCorrect;
+    private GameController gameController;
+
+    private void Awake()
+    {
+        if (label == null)
+            label = GetComponentInChildren<TMP_Text>(true);
+    }
 
     public void SetValue(int v, bool correct, GameController gc)
     {
@@ -16,7 +21,12 @@ public class AnswerController : MonoBehaviour
         isCorrect = correct;
         gameController = gc;
 
-        if (tmpText) tmpText.text = v.ToString();
-        if (legacyText) legacyText.text = v.ToString();
+        if (label != null)
+            label.text = v.ToString();
+        else
+            Debug.LogWarning("AnswerController: No TMP_Text found on AnswerPrefab.");
     }
+
+    public int Value => value;
+    public bool IsCorrect => isCorrect;
 }

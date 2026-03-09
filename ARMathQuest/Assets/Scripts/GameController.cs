@@ -102,7 +102,7 @@ public class GameController : MonoBehaviour
         if (inputLocked) return;
         inputLocked = true;
 
-        if (answer.isCorrect)
+        if (answer.IsCorrect)
         {
             score++;
             Play(correctClip);
