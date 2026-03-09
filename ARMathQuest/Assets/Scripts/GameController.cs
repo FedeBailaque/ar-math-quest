@@ -1,5 +1,4 @@
 using UnityEngine;
-using UnityEngine.UI; // remove if you use TMP only
 using TMPro;
 
 public class GameController : MonoBehaviour
@@ -9,13 +8,14 @@ public class GameController : MonoBehaviour
 
     [Header("Config")]
     public int questionsPerRound = 5;
+    public bool autoIncreaseDifficulty = true;
     public MathQuestionGenerator.Difficulty difficulty = MathQuestionGenerator.Difficulty.Easy;
 
     [Header("References")]
     public MathQuestionGenerator generator;
     public ARAnswerSpawner spawner;
 
-    [Header("UI (assign what you have; can be placeholders)")]
+    [Header("UI")]
     public GameObject startPanel;
     public GameObject endPanel;
     public TMP_Text questionText;
@@ -41,18 +41,21 @@ public class GameController : MonoBehaviour
     public void ShowStart()
     {
         State = GameState.Start;
+
         if (startPanel) startPanel.SetActive(true);
         if (endPanel) endPanel.SetActive(false);
+
+        score = 0;
+        asked = 0;
+        inputLocked = false;
+
         SetHUD("", 0, 0);
-        spawner.SetPlacementEnabled(false); // only after Start pressed
+        spawner.SetPlacementEnabled(false);
     }
 
     public void OnPressStart()
     {
         Play(clickClip);
-        score = 0;
-        asked = 0;
-        inputLocked = false;
 
         if (startPanel) startPanel.SetActive(false);
         if (endPanel) endPanel.SetActive(false);
@@ -63,7 +66,6 @@ public class GameController : MonoBehaviour
         spawner.SetPlacementEnabled(true);
     }
 
-    // Called by spawner after first placement
     public void OnPlaced()
     {
         State = GameState.Placed;
@@ -81,25 +83,35 @@ public class GameController : MonoBehaviour
         asked++;
         inputLocked = false;
 
+        // Optional auto difficulty scaling
+        if (autoIncreaseDifficulty)
+        {
+            if (asked > questionsPerRound * 0.6f)
+                difficulty = MathQuestionGenerator.Difficulty.Hard;
+            else if (asked > questionsPerRound * 0.3f)
+                difficulty = MathQuestionGenerator.Difficulty.Medium;
+        }
+
         currentQuestion = generator.GenerateQuestion(difficulty);
         SetHUD(currentQuestion.ToString(), score, asked);
 
-        // Create answer set: correct + distractors
         int correct = currentQuestion.correct;
         int[] dis = generator.GenerateDistractors(correct);
 
-        // Put into array then shuffle slots
         int[] values = new[] { correct, dis[0], dis[1] };
         Shuffle(values);
 
-        spawner.SpawnAnswers(values, correct);
         State = GameState.Answering;
+
+        spawner.ClearAnswers();   // Prevent stacking bugs
+        spawner.SpawnAnswers(values, correct);
     }
 
     public void OnAnswerSelected(AnswerController answer)
     {
         if (State != GameState.Answering) return;
         if (inputLocked) return;
+
         inputLocked = true;
 
         if (answer.IsCorrect)
@@ -114,20 +126,20 @@ public class GameController : MonoBehaviour
             spawner.PlayIncorrectFeedback(answer);
         }
 
-        // wait a moment then next question
         Invoke(nameof(NextQuestion), 1.0f);
     }
 
     private void EndRound()
     {
         State = GameState.End;
+
         spawner.ClearAnswers();
+        spawner.SetPlacementEnabled(false);
 
         if (endPanel) endPanel.SetActive(true);
         if (endScoreText) endScoreText.text = $"Score: {score}/{questionsPerRound}";
-        SetHUD("", score, asked);
 
-        spawner.SetPlacementEnabled(false);
+        SetHUD("", score, asked);
     }
 
     public void OnPressPlayAgain()
@@ -136,11 +148,9 @@ public class GameController : MonoBehaviour
         ShowStart();
     }
 
-    // Optional: call FirebaseManager here later
     public void OnPressSaveAndExit()
     {
         Play(clickClip);
-        // FirebaseManager.SaveSession(...) later
         ShowStart();
     }
 

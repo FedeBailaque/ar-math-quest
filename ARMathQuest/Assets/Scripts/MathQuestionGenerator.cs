@@ -1,50 +1,140 @@
 using UnityEngine;
+using System.Collections.Generic;
 
 public class MathQuestionGenerator : MonoBehaviour
 {
-    public enum Difficulty { Easy, Medium }
+    public enum Difficulty { Easy, Medium, Hard }
 
     [System.Serializable]
     public struct Question
     {
         public int a;
         public int b;
-        public char op;     // '+' or '-'
+        public char op;   // '+', '-', '×', '÷'
         public int correct;
-        public override string ToString() => $"{a} {op} {b} = ?";
+
+        public override string ToString()
+        {
+            return $"{a} {op} {b} = ?";
+        }
     }
 
+    [Header("Difficulty Settings")]
     public int easyMax = 5;
     public int mediumMax = 10;
+    public int hardMax = 15;
 
-    public Question GenerateQuestion(Difficulty d)
+    public Question GenerateQuestion(Difficulty difficulty)
     {
-        int max = (d == Difficulty.Easy) ? easyMax : mediumMax;
+        int max = difficulty switch
+        {
+            Difficulty.Easy => easyMax,
+            Difficulty.Medium => mediumMax,
+            Difficulty.Hard => hardMax,
+            _ => easyMax
+        };
 
         int a = Random.Range(1, max + 1);
         int b = Random.Range(1, max + 1);
 
-        // 70% addition, 30% subtraction (no negatives)
-        if (Random.value < 0.7f)
+        char op = GetOperation(difficulty);
+        int correct = 0;
+
+        switch (op)
         {
-            return new Question { a = a, b = b, op = '+', correct = a + b };
+            case '+':
+                correct = a + b;
+                break;
+
+            case '-':
+                if (a < b)
+                {
+                    int temp = a;
+                    a = b;
+                    b = temp;
+                }
+                correct = a - b;
+                break;
+
+            case '×':
+                correct = a * b;
+                break;
+
+            case '÷':
+                // ensure clean division
+                b = Random.Range(1, max + 1);
+                correct = Random.Range(1, max + 1);
+                a = correct * b; // guarantees no decimals
+                break;
         }
-        else
+
+        return new Question
         {
-            if (a < b) { int t = a; a = b; b = t; }
-            return new Question { a = a, b = b, op = '-', correct = a - b };
+            a = a,
+            b = b,
+            op = op,
+            correct = correct
+        };
+    }
+
+    private char GetOperation(Difficulty difficulty)
+    {
+        switch (difficulty)
+        {
+            case Difficulty.Easy:
+                return (Random.value < 0.7f) ? '+' : '-';
+
+            case Difficulty.Medium:
+                int m = Random.Range(0, 3);
+                return m switch
+                {
+                    0 => '+',
+                    1 => '-',
+                    _ => '×'
+                };
+
+            case Difficulty.Hard:
+                int h = Random.Range(0, 4);
+                return h switch
+                {
+                    0 => '+',
+                    1 => '-',
+                    2 => '×',
+                    _ => '÷'
+                };
+
+            default:
+                return '+';
         }
     }
 
     public int[] GenerateDistractors(int correct)
     {
-        // Guarantee different from correct and from each other
-        int d1 = correct + Random.Range(1, 4);
-        int d2 = correct - Random.Range(1, 4);
-        if (d2 == correct) d2 = correct + 4;
-        if (d2 < 0) d2 = correct + 2;
+        HashSet<int> values = new HashSet<int>();
+        values.Add(correct);
 
-        if (d2 == d1) d2 += 1;
-        return new[] { d1, d2 };
+        int range = Mathf.Max(3, Mathf.Abs(correct / 2));
+
+        while (values.Count < 3)
+        {
+            int candidate = correct + Random.Range(-range, range + 1);
+
+            if (candidate >= 0 && candidate != correct)
+                values.Add(candidate);
+        }
+
+        int[] result = new int[3];
+        values.CopyTo(result);
+        Shuffle(result);
+        return result;
+    }
+
+    private void Shuffle(int[] arr)
+    {
+        for (int i = arr.Length - 1; i > 0; i--)
+        {
+            int j = Random.Range(0, i + 1);
+            (arr[i], arr[j]) = (arr[j], arr[i]);
+        }
     }
 }
