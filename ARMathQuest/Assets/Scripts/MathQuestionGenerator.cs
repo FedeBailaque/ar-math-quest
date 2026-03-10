@@ -109,25 +109,26 @@ public class MathQuestionGenerator : MonoBehaviour
     }
 
     public int[] GenerateDistractors(int correct)
+{
+    HashSet<int> distractors = new HashSet<int>();
+
+    int range = Mathf.Max(3, Mathf.Abs(correct / 2));
+
+    while (distractors.Count < 2)
     {
-        HashSet<int> values = new HashSet<int>();
-        values.Add(correct);
+        int candidate = correct + Random.Range(-range, range + 1);
 
-        int range = Mathf.Max(3, Mathf.Abs(correct / 2));
-
-        while (values.Count < 3)
+        if (candidate >= 0 && candidate != correct)
         {
-            int candidate = correct + Random.Range(-range, range + 1);
-
-            if (candidate >= 0 && candidate != correct)
-                values.Add(candidate);
+            distractors.Add(candidate);
         }
-
-        int[] result = new int[3];
-        values.CopyTo(result);
-        Shuffle(result);
-        return result;
     }
+
+    int[] result = new int[2];
+    distractors.CopyTo(result);
+
+    return result;
+}
 
     private void Shuffle(int[] arr)
     {

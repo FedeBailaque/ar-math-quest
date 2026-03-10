@@ -1,9 +1,8 @@
-using TMPro;
 using UnityEngine;
 
 public class AnswerController : MonoBehaviour
 {
-    [SerializeField] private TMP_Text label;
+    [SerializeField] private TextMesh label;
 
     private int value;
     private bool isCorrect;
@@ -12,7 +11,7 @@ public class AnswerController : MonoBehaviour
     private void Awake()
     {
         if (label == null)
-            label = GetComponentInChildren<TMP_Text>(true);
+            label = GetComponentInChildren<TextMesh>(true);
     }
 
     public void SetValue(int v, bool correct, GameController gc)
@@ -24,7 +23,7 @@ public class AnswerController : MonoBehaviour
         if (label != null)
             label.text = v.ToString();
         else
-            Debug.LogWarning("AnswerController: No TMP_Text found on AnswerPrefab.");
+            Debug.LogWarning("AnswerController: No TextMesh found on AnswerPrefab.");
     }
 
     public int Value => value;

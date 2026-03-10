@@ -1719,7 +1719,7 @@ MonoBehaviour:
   planeManager: {fileID: 1764499137}
   anchorManager: {fileID: 1764499139}
   basePrefab: {fileID: 7325203891090239497, guid: b81324cbe5c254241b630d46aa25dbf8, type: 3}
-  answerPrefab: {fileID: 3231698763979138826, guid: 5d1e4140d26644a7882715ff27474dc5, type: 3}
+  answerPrefab: {fileID: 659679599969730170, guid: 9f75a26c0aa1f0a4ebebca11f4bf0ebf, type: 3}
   gameController: {fileID: 1819488247}
   answerHeight: 0.15
   answerSpacing: 0.2
@@ -1787,6 +1787,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MathQuestionGenerator
   easyMax: 5
   mediumMax: 10
+  hardMax: 15
 --- !u!114 &1819488247
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1800,6 +1801,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GameController
   questionsPerRound: 5
+  autoIncreaseDifficulty: 1
   difficulty: 0
   generator: {fileID: 1819488246}
   spawner: {fileID: 1764499140}

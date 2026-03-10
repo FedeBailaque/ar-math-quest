@@ -43,22 +43,37 @@ public class ARAnswerSpawner : MonoBehaviour
     }
 
     void Update()
+{
+#if UNITY_EDITOR
+    // Mouse click for testing in Unity Editor
+    if (Input.GetMouseButtonDown(0))
     {
-        if (Input.touchCount == 0) return;
+        Vector2 mousePos = Input.mousePosition;
 
-        Touch t = Input.GetTouch(0);
-        if (t.phase != TouchPhase.Began) return;
-
-        // First tap places base/anchor
         if (placementEnabled && !placed)
         {
-            TryPlace(t.position);
+            TryPlace(mousePos);
             return;
         }
 
-        // After placement: tap answers
-        TrySelectAnswer(t.position);
+        TrySelectAnswer(mousePos);
     }
+#else
+    // Touch input for iPhone
+    if (Input.touchCount == 0) return;
+
+    Touch t = Input.GetTouch(0);
+    if (t.phase != TouchPhase.Began) return;
+
+    if (placementEnabled && !placed)
+    {
+        TryPlace(t.position);
+        return;
+    }
+
+    TrySelectAnswer(t.position);
+#endif
+}
 
     private void TryPlace(Vector2 screenPos)
     {
@@ -97,34 +112,33 @@ public class ARAnswerSpawner : MonoBehaviour
             gameController.OnPlaced();
     }
 
-    public void SpawnAnswers(int[] values, int correctValue)
+   public void SpawnAnswers(int[] values, int correctValue)
+{
+    ClearAnswers();
+
+    if (anchor == null || answerPrefab == null || gameController == null) return;
+
+    Vector3[] offsets =
     {
-        ClearAnswers();
-        if (anchor == null || answerPrefab == null || gameController == null) return;
+        new Vector3(-answerSpacing, answerHeight, 0f),
+        new Vector3(0f, answerHeight, 0f),
+        new Vector3(answerSpacing, answerHeight, 0f)
+    };
 
-        Vector3[] offsets =
-        {
-            new Vector3(-answerSpacing, answerHeight, 0f),
-            new Vector3(0f, answerHeight, 0f),
-            new Vector3(answerSpacing, answerHeight, 0f)
-        };
+    for (int i = 0; i < 3; i++)
+    {
+        GameObject go = Instantiate(answerPrefab, anchor.transform);
+        go.transform.localPosition = offsets[i];
 
-        for (int i = 0; i < 3; i++)
-        {
-            GameObject go = Instantiate(answerPrefab, anchor.transform);
-            go.transform.localPosition = offsets[i];
+        FaceCamera(go.transform);
 
-            FaceCamera(go.transform);
+        var ac = go.GetComponent<AnswerController>();
+        bool isCorrect = values[i] == correctValue;
+        ac.SetValue(values[i], isCorrect, gameController);
 
-            var ac = go.GetComponent<AnswerController>();
-            if (ac == null) ac = go.AddComponent<AnswerController>();
-
-            bool isCorrect = values[i] == correctValue;
-            ac.SetValue(values[i], isCorrect, gameController);
-
-            spawnedAnswers.Add(go);
-        }
+        spawnedAnswers.Add(go);
     }
+}
 
     public void ClearAnswers()
     {

@@ -54,17 +54,17 @@ public class GameController : MonoBehaviour
     }
 
     public void OnPressStart()
-    {
-        Play(clickClip);
+{
+    Play(clickClip);
 
-        if (startPanel) startPanel.SetActive(false);
-        if (endPanel) endPanel.SetActive(false);
+    if (startPanel) startPanel.SetActive(false);
+    if (endPanel) endPanel.SetActive(false);
 
-        State = GameState.Scanning;
-        SetHUD("Find a plane and tap to place", score, asked);
+    State = GameState.Scanning;
+    SetHUD("Find a plane and tap to place", score, asked);
 
-        spawner.SetPlacementEnabled(true);
-    }
+    spawner.SetPlacementEnabled(true);
+}
 
     public void OnPlaced()
     {
