@@ -172,12 +172,17 @@ public class ARAnswerSpawner : MonoBehaviour
     }
 
     private void FaceCamera(Transform t)
-    {
-        if (!arCamera) return;
-        Vector3 camPos = arCamera.transform.position;
-        t.LookAt(camPos);
-        t.eulerAngles = new Vector3(0f, t.eulerAngles.y, 0f);
-    }
+{
+    if (!arCamera) return;
+
+    // Make the object face the camera without flipping/mirroring
+    Vector3 toCam = t.position - arCamera.transform.position; // NOTE: t - cam (not cam - t)
+    toCam.y = 0f; // stay upright
+
+    if (toCam.sqrMagnitude < 0.0001f) return;
+
+    t.rotation = Quaternion.LookRotation(toCam, Vector3.up);
+}
 
     public void PlayCorrectFeedback(AnswerController ac)
     {
