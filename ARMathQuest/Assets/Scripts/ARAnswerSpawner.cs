@@ -20,7 +20,7 @@ public class ARAnswerSpawner : MonoBehaviour
 
     [Header("Spawn tuning")]
     public float answerHeight = 0.15f;
-    public float answerSpacing = 0.20f;
+    public float answerSpacing = 0.45f;
 
     private bool placementEnabled = false;
     private bool placed = false;
@@ -129,6 +129,7 @@ public class ARAnswerSpawner : MonoBehaviour
     {
         GameObject go = Instantiate(answerPrefab, anchor.transform);
         go.transform.localPosition = offsets[i];
+        go.transform.localScale = Vector3.one * 0.12f;
 
         FaceCamera(go.transform);
 
@@ -159,17 +160,19 @@ public class ARAnswerSpawner : MonoBehaviour
     }
 
     private void TrySelectAnswer(Vector2 screenPos)
-    {
-        if (arCamera == null || gameController == null) return;
+{
+    if (arCamera == null || gameController == null) return;
 
-        Ray ray = arCamera.ScreenPointToRay(screenPos);
-        if (Physics.Raycast(ray, out RaycastHit hit))
+    Ray ray = arCamera.ScreenPointToRay(screenPos);
+    if (Physics.Raycast(ray, out RaycastHit hit, 100f))
+    {
+        var ac = hit.collider.GetComponentInParent<AnswerController>();
+        if (ac != null)
         {
-            var ac = hit.collider.GetComponentInParent<AnswerController>();
-            if (ac != null)
-                gameController.OnAnswerSelected(ac);
+            gameController.OnAnswerSelected(ac);
         }
     }
+}
 
     private void FaceCamera(Transform t)
 {
