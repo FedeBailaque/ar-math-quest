@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.UI;
 using TMPro;
 
 public class GameController : MonoBehaviour
@@ -22,11 +23,18 @@ public class GameController : MonoBehaviour
     public TMP_Text scoreText;
     public TMP_Text endScoreText;
 
+    [Header("End Screen")]
+    public Image[] starImages;
+    public TMP_Text messageText;
+
     [Header("Audio (optional)")]
     public AudioSource audioSource;
     public AudioClip correctClip;
     public AudioClip incorrectClip;
     public AudioClip clickClip;
+
+    private static readonly Color StarActive = new Color(1f, 0.78f, 0.27f);
+    private static readonly Color StarInactive = new Color(0.82f, 0.82f, 0.82f);
 
     private int score = 0;
     private int asked = 0;
@@ -45,26 +53,33 @@ public class GameController : MonoBehaviour
         if (startPanel) startPanel.SetActive(true);
         if (endPanel) endPanel.SetActive(false);
 
+        // Hide HUD on start screen
+        if (scoreText) scoreText.gameObject.SetActive(false);
+        if (questionText) questionText.gameObject.SetActive(false);
+
         score = 0;
         asked = 0;
         inputLocked = false;
 
-        SetHUD("", 0, 0);
         spawner.SetPlacementEnabled(false);
     }
 
     public void OnPressStart()
-{
-    Play(clickClip);
+    {
+        Play(clickClip);
 
-    if (startPanel) startPanel.SetActive(false);
-    if (endPanel) endPanel.SetActive(false);
+        if (startPanel) startPanel.SetActive(false);
+        if (endPanel) endPanel.SetActive(false);
 
-    State = GameState.Scanning;
-    SetHUD("Find a plane and tap to place", score, asked);
+        // Show HUD during gameplay
+        if (scoreText) scoreText.gameObject.SetActive(true);
+        if (questionText) questionText.gameObject.SetActive(true);
 
-    spawner.SetPlacementEnabled(true);
-}
+        State = GameState.Scanning;
+        SetHUD("Find a plane and tap to place", score, asked);
+
+        spawner.SetPlacementEnabled(true);
+    }
 
     public void OnPlaced()
     {
@@ -83,7 +98,6 @@ public class GameController : MonoBehaviour
         asked++;
         inputLocked = false;
 
-        // Optional auto difficulty scaling
         if (autoIncreaseDifficulty)
         {
             if (asked > questionsPerRound * 0.6f)
@@ -103,7 +117,7 @@ public class GameController : MonoBehaviour
 
         State = GameState.Answering;
 
-        spawner.ClearAnswers();   // Prevent stacking bugs
+        spawner.ClearAnswers();
         spawner.SpawnAnswers(values, correct);
     }
 
@@ -136,10 +150,31 @@ public class GameController : MonoBehaviour
         spawner.ClearAnswers();
         spawner.SetPlacementEnabled(false);
 
-        if (endPanel) endPanel.SetActive(true);
-        if (endScoreText) endScoreText.text = $"Score: {score}/{questionsPerRound}";
+        // Hide HUD on end screen
+        if (scoreText) scoreText.gameObject.SetActive(false);
+        if (questionText) questionText.gameObject.SetActive(false);
 
-        SetHUD("", score, asked);
+        if (endPanel) endPanel.SetActive(true);
+        if (endScoreText) endScoreText.text = $"{score}/{questionsPerRound}";
+
+        // Star rating
+        int stars = score <= 1 ? 1 : score <= 3 ? 2 : 3;
+
+        if (starImages != null)
+        {
+            for (int i = 0; i < starImages.Length; i++)
+            {
+                if (starImages[i] != null)
+                    starImages[i].color = i < stars ? StarActive : StarInactive;
+            }
+        }
+
+        if (messageText != null)
+        {
+            messageText.text = stars == 3 ? "Amazing job!"
+                             : stars == 2 ? "Good effort!"
+                             : "Keep practicing!";
+        }
     }
 
     public void OnPressPlayAgain()

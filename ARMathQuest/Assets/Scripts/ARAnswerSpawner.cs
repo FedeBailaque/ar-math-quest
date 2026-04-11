@@ -25,7 +25,13 @@ public class ARAnswerSpawner : MonoBehaviour
     public float answerScale = 0.12f;
 
     [Header("Selection")]
-    public LayerMask answerLayerMask = ~0; // set this to Answers layer in Inspector if you use one
+    public LayerMask answerLayerMask = ~0;
+
+#if UNITY_EDITOR
+    [Header("Editor Debug")]
+    [Tooltip("Press Space in Play mode to skip AR placement and spawn answers directly")]
+    public Vector3 debugSpawnPosition = new Vector3(0f, 0f, 2f);
+#endif
 
     private bool placementEnabled = false;
     private bool placed = false;
@@ -50,6 +56,13 @@ public class ARAnswerSpawner : MonoBehaviour
     void Update()
     {
 #if UNITY_EDITOR
+        // SPACEBAR = skip AR placement, spawn at debug position
+        if (Input.GetKeyDown(KeyCode.Space) && placementEnabled && !placed)
+        {
+            EditorPlace();
+            return;
+        }
+
         if (Input.GetMouseButtonDown(0))
         {
             Vector2 inputPos = Input.mousePosition;
@@ -80,6 +93,33 @@ public class ARAnswerSpawner : MonoBehaviour
 #endif
     }
 
+#if UNITY_EDITOR
+    private void EditorPlace()
+    {
+        if (playAreaRoot != null)
+            Destroy(playAreaRoot);
+
+        // Place in front of the camera
+        Vector3 spawnPos = arCamera != null
+            ? arCamera.transform.position + arCamera.transform.forward * 2f
+            : debugSpawnPosition;
+
+        playAreaRoot = new GameObject("PlayAreaRoot");
+        playAreaRoot.transform.position = spawnPos;
+
+        if (basePrefab != null)
+            baseInstance = Instantiate(basePrefab, playAreaRoot.transform);
+
+        placed = true;
+        placementEnabled = false;
+
+        Debug.Log("[EditorDebug] Placed at " + spawnPos + " — press mouse buttons to select answers");
+
+        if (gameController != null)
+            gameController.OnPlaced();
+    }
+#endif
+
     private void TryPlace(Vector2 screenPos)
     {
         if (raycastManager == null) return;
@@ -90,7 +130,6 @@ public class ARAnswerSpawner : MonoBehaviour
         var hit = hits[0];
         Pose pose = hit.pose;
 
-        // Optional anchor creation: kept for compatibility, but visuals are no longer parented to it
         ARPlane tappedPlane = null;
         if (planeManager != null)
             tappedPlane = planeManager.GetPlane(hit.trackableId);
@@ -105,7 +144,6 @@ public class ARAnswerSpawner : MonoBehaviour
             anchor = dummy.AddComponent<ARAnchor>();
         }
 
-        // Stable visual root: prevents visible wobble from live anchor updates
         if (playAreaRoot != null)
             Destroy(playAreaRoot);
 
@@ -131,8 +169,8 @@ public class ARAnswerSpawner : MonoBehaviour
         Vector3[] offsets =
         {
             new Vector3(-answerSpacing, answerHeight, 0f),
-            new Vector3(0f,           answerHeight, 0f),
-            new Vector3(answerSpacing, answerHeight, 0f)
+            new Vector3(0f,            answerHeight, 0f),
+            new Vector3(answerSpacing,  answerHeight, 0f)
         };
 
         for (int i = 0; i < 3; i++)
@@ -169,7 +207,6 @@ public class ARAnswerSpawner : MonoBehaviour
         {
             if (a) Destroy(a);
         }
-
         spawnedAnswers.Clear();
     }
 
@@ -197,9 +234,7 @@ public class ARAnswerSpawner : MonoBehaviour
         {
             var ac = hit.collider.GetComponentInParent<AnswerController>();
             if (ac != null)
-            {
                 gameController.OnAnswerSelected(ac);
-            }
         }
     }
 
@@ -239,14 +274,11 @@ public class ARAnswerSpawner : MonoBehaviour
 
         Color originalColor = r.material.color;
 
-        // Apply temporary feedback
         r.material.color = feedbackColor;
         t.localScale = originalScale * scaleMultiplier;
 
-        // Wait briefly
         yield return new WaitForSeconds(0.35f);
 
-        // Reset
         r.material.color = originalColor;
         t.localScale = originalScale;
     }
