@@ -2757,7 +2757,7 @@ MonoBehaviour:
   audioSource: {fileID: 1819488249}
   correctClip: {fileID: 8300000, guid: 22ae8f7f1d01a447380e2110c9e9dce3, type: 3}
   incorrectClip: {fileID: 8300000, guid: 9ee440f6091ff4824b4d74cedf174b44, type: 3}
-  clickClip: {fileID: 8300000, guid: 9ee440f6091ff4824b4d74cedf174b44, type: 3}
+  clickClip: {fileID: 0}
 --- !u!4 &1819488248
 Transform:
   m_ObjectHideFlags: 0
