@@ -26,13 +26,20 @@ public class MathQuestionGenerator : MonoBehaviour
 
     public Question GenerateQuestion(Difficulty difficulty)
     {
-        int max = difficulty switch
+        int max = easyMax;
+
+        switch (difficulty)
         {
-            Difficulty.Easy => easyMax,
-            Difficulty.Medium => mediumMax,
-            Difficulty.Hard => hardMax,
-            _ => easyMax
-        };
+            case Difficulty.Easy:
+                max = easyMax;
+                break;
+            case Difficulty.Medium:
+                max = mediumMax;
+                break;
+            case Difficulty.Hard:
+                max = hardMax;
+                break;
+        }
 
         int a = Random.Range(1, max + 1);
         int b = Random.Range(1, max + 1);
@@ -61,20 +68,20 @@ public class MathQuestionGenerator : MonoBehaviour
                 break;
 
             case '÷':
-                // ensure clean division
+                // Force clean division
                 b = Random.Range(1, max + 1);
                 correct = Random.Range(1, max + 1);
-                a = correct * b; // guarantees no decimals
+                a = correct * b;
                 break;
         }
 
-        return new Question
-        {
-            a = a,
-            b = b,
-            op = op,
-            correct = correct
-        };
+        Question q = new Question();
+        q.a = a;
+        q.b = b;
+        q.op = op;
+        q.correct = correct;
+
+        return q;
     }
 
     private char GetOperation(Difficulty difficulty)
@@ -82,26 +89,23 @@ public class MathQuestionGenerator : MonoBehaviour
         switch (difficulty)
         {
             case Difficulty.Easy:
+                // Easy: mostly addition, sometimes subtraction
                 return (Random.value < 0.7f) ? '+' : '-';
 
             case Difficulty.Medium:
+                // Medium: addition, subtraction, multiplication
                 int m = Random.Range(0, 3);
-                return m switch
-                {
-                    0 => '+',
-                    1 => '-',
-                    _ => '×'
-                };
+                if (m == 0) return '+';
+                if (m == 1) return '-';
+                return '×';
 
             case Difficulty.Hard:
+                // Hard: addition, subtraction, multiplication, division
                 int h = Random.Range(0, 4);
-                return h switch
-                {
-                    0 => '+',
-                    1 => '-',
-                    2 => '×',
-                    _ => '÷'
-                };
+                if (h == 0) return '+';
+                if (h == 1) return '-';
+                if (h == 2) return '×';
+                return '÷';
 
             default:
                 return '+';
@@ -109,33 +113,23 @@ public class MathQuestionGenerator : MonoBehaviour
     }
 
     public int[] GenerateDistractors(int correct)
-{
-    HashSet<int> distractors = new HashSet<int>();
-
-    int range = Mathf.Max(3, Mathf.Abs(correct / 2));
-
-    while (distractors.Count < 2)
     {
-        int candidate = correct + Random.Range(-range, range + 1);
+        HashSet<int> distractors = new HashSet<int>();
 
-        if (candidate >= 0 && candidate != correct)
+        int range = Mathf.Max(3, Mathf.Abs(correct / 2));
+
+        while (distractors.Count < 2)
         {
-            distractors.Add(candidate);
+            int candidate = correct + Random.Range(-range, range + 1);
+
+            if (candidate >= 0 && candidate != correct)
+            {
+                distractors.Add(candidate);
+            }
         }
-    }
 
-    int[] result = new int[2];
-    distractors.CopyTo(result);
-
-    return result;
-}
-
-    private void Shuffle(int[] arr)
-    {
-        for (int i = arr.Length - 1; i > 0; i--)
-        {
-            int j = Random.Range(0, i + 1);
-            (arr[i], arr[j]) = (arr[j], arr[i]);
-        }
+        int[] result = new int[2];
+        distractors.CopyTo(result);
+        return result;
     }
 }

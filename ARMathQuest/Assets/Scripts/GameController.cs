@@ -22,6 +22,12 @@ public class GameController : MonoBehaviour
     public TMP_Text questionText;
     public TMP_Text scoreText;
     public TMP_Text endScoreText;
+    public Button startButton;
+
+    [Header("Difficulty Buttons")]
+    public Button easyButton;
+    public Button mediumButton;
+    public Button hardButton;
 
     [Header("End Screen")]
     public Image[] starImages;
@@ -36,10 +42,17 @@ public class GameController : MonoBehaviour
     private static readonly Color StarActive = new Color(1f, 0.78f, 0.27f);
     private static readonly Color StarInactive = new Color(0.82f, 0.82f, 0.82f);
 
+    // Difficulty button colors
+    private readonly Color easyColor = new Color(0.20f, 0.70f, 0.30f);
+    private readonly Color mediumColor = new Color(0.85f, 0.70f, 0.20f);
+    private readonly Color hardColor = new Color(0.80f, 0.30f, 0.30f);
+    private readonly Color selectedBoost = new Color(0.15f, 0.15f, 0.15f);
+
     private int score = 0;
     private int asked = 0;
     private MathQuestionGenerator.Question currentQuestion;
     private bool inputLocked = false;
+    private bool difficultySelected = false;
 
     void Start()
     {
@@ -60,12 +73,86 @@ public class GameController : MonoBehaviour
         score = 0;
         asked = 0;
         inputLocked = false;
+        difficultySelected = false;
+        difficulty = MathQuestionGenerator.Difficulty.Easy;
 
-        spawner.SetPlacementEnabled(false);
+        if (startButton) startButton.interactable = false;
+
+        ResetDifficultyButtonColors();
+
+        if (spawner) spawner.SetPlacementEnabled(false);
+    }
+
+    public void SetEasy()
+    {
+        difficulty = MathQuestionGenerator.Difficulty.Easy;
+        difficultySelected = true;
+
+        ResetDifficultyButtonColors();
+
+        if (easyButton)
+            easyButton.image.color = ClampColor(easyColor + selectedBoost);
+
+        if (startButton) startButton.interactable = true;
+
+        Play(clickClip);
+    }
+
+    public void SetMedium()
+    {
+        difficulty = MathQuestionGenerator.Difficulty.Medium;
+        difficultySelected = true;
+
+        ResetDifficultyButtonColors();
+
+        if (mediumButton)
+            mediumButton.image.color = ClampColor(mediumColor + selectedBoost);
+
+        if (startButton) startButton.interactable = true;
+
+        Play(clickClip);
+    }
+
+    public void SetHard()
+    {
+        difficulty = MathQuestionGenerator.Difficulty.Hard;
+        difficultySelected = true;
+
+        ResetDifficultyButtonColors();
+
+        if (hardButton)
+            hardButton.image.color = ClampColor(hardColor + selectedBoost);
+
+        if (startButton) startButton.interactable = true;
+
+        Play(clickClip);
+    }
+
+    private void ResetDifficultyButtonColors()
+    {
+        if (easyButton) easyButton.image.color = easyColor;
+        if (mediumButton) mediumButton.image.color = mediumColor;
+        if (hardButton) hardButton.image.color = hardColor;
+    }
+
+    private Color ClampColor(Color c)
+    {
+        return new Color(
+            Mathf.Clamp01(c.r),
+            Mathf.Clamp01(c.g),
+            Mathf.Clamp01(c.b),
+            Mathf.Clamp01(c.a <= 0 ? 1f : c.a)
+        );
     }
 
     public void OnPressStart()
     {
+        if (!difficultySelected)
+        {
+            Debug.Log("Please select a difficulty before starting.");
+            return;
+        }
+
         Play(clickClip);
 
         if (startPanel) startPanel.SetActive(false);
@@ -78,7 +165,7 @@ public class GameController : MonoBehaviour
         State = GameState.Scanning;
         SetHUD("Find a plane and tap to place", score, asked);
 
-        spawner.SetPlacementEnabled(true);
+        if (spawner) spawner.SetPlacementEnabled(true);
     }
 
     public void OnPlaced()
@@ -117,8 +204,11 @@ public class GameController : MonoBehaviour
 
         State = GameState.Answering;
 
-        spawner.ClearAnswers();
-        spawner.SpawnAnswers(values, correct);
+        if (spawner)
+        {
+            spawner.ClearAnswers();
+            spawner.SpawnAnswers(values, correct);
+        }
     }
 
     public void OnAnswerSelected(AnswerController answer)
@@ -132,12 +222,12 @@ public class GameController : MonoBehaviour
         {
             score++;
             Play(correctClip);
-            spawner.PlayCorrectFeedback(answer);
+            if (spawner) spawner.PlayCorrectFeedback(answer);
         }
         else
         {
             Play(incorrectClip);
-            spawner.PlayIncorrectFeedback(answer);
+            if (spawner) spawner.PlayIncorrectFeedback(answer);
         }
 
         Invoke(nameof(NextQuestion), 1.0f);
@@ -147,8 +237,11 @@ public class GameController : MonoBehaviour
     {
         State = GameState.End;
 
-        spawner.ClearAnswers();
-        spawner.SetPlacementEnabled(false);
+        if (spawner)
+        {
+            spawner.ClearAnswers();
+            spawner.SetPlacementEnabled(false);
+        }
 
         // Hide HUD on end screen
         if (scoreText) scoreText.gameObject.SetActive(false);
@@ -157,7 +250,6 @@ public class GameController : MonoBehaviour
         if (endPanel) endPanel.SetActive(true);
         if (endScoreText) endScoreText.text = $"{score}/{questionsPerRound}";
 
-        // Star rating
         int stars = score <= 1 ? 1 : score <= 3 ? 2 : 3;
 
         if (starImages != null)
