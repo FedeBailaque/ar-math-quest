@@ -3283,7 +3283,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GameController
   questionsPerRound: 5
-  autoIncreaseDifficulty: 1
+  autoIncreaseDifficulty: 0
   difficulty: 0
   generator: {fileID: 1819488246}
   spawner: {fileID: 1764499140}
@@ -3701,7 +3701,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1938725269
 RectTransform:
   m_ObjectHideFlags: 0
